@@ -1,0 +1,33 @@
+import express from "express";
+import { isAuth, isAdmin } from "../middleware/auth";
+import { getUsers } from "../controllers/user";
+import {
+  addProblem,
+  deleteProblem,
+  updateProblem,
+  updateProblemAnswer,
+  updateProblemDifficulty,
+  updateProblemTags,
+} from "../controllers/problems";
+
+const router = express.Router();
+
+router.get("/all/users", isAuth, isAdmin, getUsers);
+router.post("/add/coding/problem", isAuth, isAdmin, addProblem);
+router.put("/update/problem/:id", isAuth, isAdmin, updateProblem);
+router.patch(
+  "/update/problem/difficulty/:id",
+  isAuth,
+  isAdmin,
+  updateProblemDifficulty
+);
+router.patch("/update/problem/tags/:id", isAuth, isAdmin, updateProblemTags);
+router.patch(
+  "/update/problem/answers/:id",
+  isAuth,
+  isAdmin,
+  updateProblemAnswer
+);
+router.delete("/delete/problem/:id", isAuth, isAdmin, deleteProblem);
+
+export default router;
