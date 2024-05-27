@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { useLoginMutation } from "@/store/services/userApi";
 import { motion as m, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
 import { Mail, Loader2 } from "lucide-react";
 import { FaGithubAlt } from "react-icons/fa";
@@ -143,6 +143,12 @@ const Login = () => {
               </m.p>
             )}
           </AnimatePresence>
+          <div>
+            <h4>Don&apos;t have an account? </h4>
+            <Link to="/register" className="text-accent hover:underline">
+              Register
+            </Link>
+          </div>
         </CardContent>
         <CardFooter className="flex-wrap gap-2">
           <Button

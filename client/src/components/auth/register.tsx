@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Link } from "react-router-dom";
 import { useRegisterMutation } from "@/store/services/userApi";
 import { motion as m, AnimatePresence } from "framer-motion";
 import { Separator } from "@/components/ui/separator";
@@ -244,6 +245,12 @@ const Register = () => {
               </m.p>
             )}
           </AnimatePresence>
+          <div>
+            <h4> have an account? </h4>
+            <Link to="/login" className="text-accent hover:underline">
+              Login
+            </Link>
+          </div>
         </CardContent>
         <CardFooter className="flex-wrap gap-2">
           <Button

@@ -1,8 +1,11 @@
 import { db } from "../lib/db";
 import bcrypt from "bcryptjs";
+import Cache from "node-cache";
 import { sendMail } from "../lib/send-mail";
 import { filterUsers } from "../lib/filter";
 import type { Response, Request } from "express";
+
+const cache = new Cache();
 
 export const addUser = async (
   req: Request<
@@ -266,6 +269,17 @@ export const getUsers = async (
   try {
     const filters = req.query;
 
+    if (filters) {
+      const cachedUsers = cache.get(`users-${JSON.stringify(filters)}`);
+      if (cachedUsers) {
+        return res.status(200).json({
+          message: "Users fetched successfully",
+          users: cachedUsers,
+          error: null,
+        });
+      }
+    }
+
     const users = await filterUsers(filters);
 
     if (!users) {
@@ -273,6 +287,12 @@ export const getUsers = async (
         message: "No users found",
         error: "NoUsersFound",
       });
+    }
+
+    if (filters) {
+      cache.set(`users-${JSON.stringify(filters)}`, users, 60 * 60);
+    } else {
+      cache.set("users", users, 60 * 60);
     }
 
     return res.status(200).json({
@@ -299,9 +319,20 @@ export const profile = async (req: Request, res: Response) => {
 
     const { id } = user;
 
+    if (cache.has(`user-${id}`)) {
+      const userProfile = cache.get(`user-${id}`);
+      return res.status(200).json({
+        message: "User profile fetched successfully",
+        userProfile,
+        error: null,
+      });
+    }
+
     const userProfile = await db.user.findUnique({
       where: { id },
     });
+
+    cache.set(`user-${id}`, userProfile, 60 * 60);
 
     return res.status(200).json({
       message: "User profile fetched successfully",
