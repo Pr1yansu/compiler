@@ -32,8 +32,9 @@ passport.use(
       const valid = await bcrypt.compare(password, user.password);
 
       if (!valid) {
-        return done(null, false, { message: "Invalid password" });
+        return done(null, false, { message: "Credentials mismatch" });
       }
+
       return done(null, user);
     }
   )

@@ -25,10 +25,9 @@ router.get(
   "/google/callback",
   passport.authenticate("google", {
     failureRedirect: `${process.env.FRONTEND_URL}/login`,
-  }),
-  (req: Request, res: Response) => {
-    res.redirect(process.env.FRONTEND_URL!);
-  }
+    successRedirect: `${process.env.FRONTEND_URL}/`,
+    failureMessage: "Failed to login",
+  })
 );
 
 router.get(
@@ -40,19 +39,22 @@ router.get(
   "/github/callback",
   passport.authenticate("github", {
     failureRedirect: `${process.env.FRONTEND_URL}/login`,
-  }),
-  (req: Request, res: Response) => {
-    res.redirect(process.env.FRONTEND_URL!);
-  }
+    successRedirect: `${process.env.FRONTEND_URL}/`,
+    failureMessage: "Failed to login",
+  })
 );
 
 router.post(
   "/login",
   passport.authenticate("local", {
-    failureRedirect: `${process.env.FRONTEND_URL}/login`,
+    failureMessage: "Failed to login",
+    successMessage: "Successfully logged in",
   }),
   (req: Request, res: Response) => {
-    return res.redirect(process.env.FRONTEND_URL!);
+    if (req.user) {
+      return res.json({ message: "Successfully logged in", user: req.user });
+    }
+    return res.status(400).json({ message: "Failed to login" });
   }
 );
 
