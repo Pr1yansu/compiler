@@ -73,9 +73,19 @@ const Login = () => {
     }
   };
 
-  const handleGithubLogin = () => {};
+  const handleGithubLogin = () => {
+    window.open(
+      `${import.meta.env.VITE_BACKEND_URL}/api/v1/user/github`,
+      "_self"
+    );
+  };
 
-  const handleGoogleLogin = () => {};
+  const handleGoogleLogin = () => {
+    window.open(
+      `${import.meta.env.VITE_BACKEND_URL}/api/v1/user/google`,
+      "_self"
+    );
+  };
 
   return (
     <section className={classes.loginContainer}>
@@ -175,7 +185,7 @@ const Login = () => {
           <Button
             className="w-full"
             disabled={loading}
-            onClick={handleGithubLogin}
+            onClick={handleGoogleLogin}
           >
             Login with google
             <FcGoogle className="w-5 h-5 ml-2" />
@@ -183,7 +193,7 @@ const Login = () => {
           <Button
             className="w-full bg-gray-800 hover:bg-gray-800/90"
             disabled={loading}
-            onClick={handleGoogleLogin}
+            onClick={handleGithubLogin}
           >
             Login with github
             <FaGithubAlt className="w-5 h-5 ml-2" />

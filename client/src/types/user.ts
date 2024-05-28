@@ -6,6 +6,12 @@ export type User = {
   password?: string;
   image?: string;
   name: string;
-  role: string;
+  role: "ADMIN" | "USER";
   createdAt: string;
+};
+
+export type UserResponse = {
+  message: string;
+  error?: string;
+  userProfile?: User;
 };

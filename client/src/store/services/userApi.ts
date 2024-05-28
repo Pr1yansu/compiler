@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { User } from "@/types/user";
+import { User, UserResponse } from "@/types/user";
 
 export const userApi = createApi({
   reducerPath: "userApi",
@@ -22,7 +22,7 @@ export const userApi = createApi({
         body,
       }),
     }),
-    getUser: builder.query<User, void>({
+    getUser: builder.query<UserResponse, void>({
       query: () => "/profile",
     }),
   }),

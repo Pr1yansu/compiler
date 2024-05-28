@@ -98,7 +98,7 @@ const Register = () => {
         email: data.email,
         password: data.password,
         name,
-        role: data.role ? data.role : "User",
+        role: data.role ? data.role : ("USER" as any),
       };
 
       await register(newData).unwrap();
@@ -124,9 +124,19 @@ const Register = () => {
     }
   };
 
-  const handleGithubLogin = () => {};
+  const handleGithubLogin = () => {
+    window.open(
+      `${import.meta.env.VITE_BACKEND_URL}/api/v1/user/github`,
+      "_self"
+    );
+  };
 
-  const handleGoogleLogin = () => {};
+  const handleGoogleLogin = () => {
+    window.open(
+      `${import.meta.env.VITE_BACKEND_URL}/api/v1/user/google`,
+      "_self"
+    );
+  };
 
   return (
     <section className={classes.loginContainer}>
@@ -228,8 +238,8 @@ const Register = () => {
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="User">User</SelectItem>
-                <SelectItem value="Admin">Admin</SelectItem>
+                <SelectItem value="USER">User</SelectItem>
+                <SelectItem value="ADMIN">Admin</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -277,7 +287,7 @@ const Register = () => {
           <Button
             className="w-full"
             disabled={isLoading}
-            onClick={handleGithubLogin}
+            onClick={handleGoogleLogin}
           >
             Login with google
             <FcGoogle className="w-5 h-5 ml-2" />
@@ -285,7 +295,7 @@ const Register = () => {
           <Button
             className="w-full bg-gray-800 hover:bg-gray-800/90"
             disabled={isLoading}
-            onClick={handleGoogleLogin}
+            onClick={handleGithubLogin}
           >
             Login with github
             <FaGithubAlt className="w-5 h-5 ml-2" />
