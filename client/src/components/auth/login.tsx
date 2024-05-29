@@ -153,9 +153,12 @@ const Login = () => {
               </m.p>
             )}
           </AnimatePresence>
-          <div>
+          <div className="flex justify-end gap-2 text-sm">
             <h4>Don&apos;t have an account? </h4>
-            <Link to="/register" className="text-accent hover:underline">
+            <Link
+              to="/register"
+              className="text-primary font-bold hover:underline"
+            >
               Register
             </Link>
           </div>

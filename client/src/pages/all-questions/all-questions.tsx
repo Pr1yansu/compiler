@@ -17,31 +17,20 @@ import QuestionForm from "@/components/forms/question-form";
 import { useGetUserQuery } from "@/store/services/userApi";
 
 const Questions = () => {
-  const { data, isLoading, isError, error } = useGetQuestionsQuery();
+  const { data, isLoading } = useGetQuestionsQuery();
   const { data: profile, isLoading: profileLoading } = useGetUserQuery();
 
   if (isLoading) {
     return <Loading />;
   }
 
-  if (isError) {
-    console.log(error);
-    return <div>ERROR</div>;
-  }
-
-  if (!data) {
-    console.log(data);
-    return <div>ERROR</div>;
-  }
-
-  if (!data.problems) {
-    return <div>No problems</div>;
-  }
-
   return (
     <div className="container mx-auto py-6 space-y-4">
       <h4 className="text-2xl font-bold text-gray-700 ">All Questions</h4>
-      <DataTable data={data.problems} columns={columns} />
+      <DataTable
+        data={data && data.problems ? data.problems : []}
+        columns={columns}
+      />
       {profileLoading ? (
         <>
           <Skeleton className="w-[100px] h-[20px] rounded-full" />

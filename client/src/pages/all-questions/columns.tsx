@@ -8,11 +8,17 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useDeleteQuestionModal, useUpdateQuestionModal } from "@/hooks/modal";
 import { Pen, SendHorizonal, Trash2 } from "lucide-react";
 import { useGetUserQuery } from "@/store/services/userApi";
-const Actions = () => {
+import { useNavigate } from "react-router-dom";
+const Actions = ({ id }: { id: string }) => {
   const { data } = useGetUserQuery();
-  const AuthorizeRoles = ["ADMIN"];
+  const navigate = useNavigate();
+  const { open: openDeleteModal, setQuestionId: setDeleteQuestionId } =
+    useDeleteQuestionModal();
+  const { open: openUpdateModal, setQuestionId: setUpdateQuestionId } =
+    useUpdateQuestionModal();
   if (!data) return null;
   if (!data.userProfile) return null;
   return (
@@ -26,6 +32,10 @@ const Actions = () => {
                   variant={"outline"}
                   size={"icon"}
                   className="text-blue-500"
+                  onClick={() => {
+                    setUpdateQuestionId(id);
+                    openUpdateModal();
+                  }}
                 >
                   <Pen size={16} />
                 </Button>
@@ -40,6 +50,10 @@ const Actions = () => {
                   variant={"outline"}
                   size={"icon"}
                   className="text-red-400"
+                  onClick={() => {
+                    setDeleteQuestionId(id);
+                    openDeleteModal();
+                  }}
                 >
                   <Trash2 size={16} />
                 </Button>
@@ -52,7 +66,12 @@ const Actions = () => {
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant={"outline"} size={"icon"} className="text-zinc-400">
+            <Button
+              variant={"outline"}
+              size={"icon"}
+              className="text-zinc-400"
+              onClick={() => navigate(`/${id}`)}
+            >
               <SendHorizonal size={16} />
             </Button>
           </TooltipTrigger>
@@ -103,6 +122,6 @@ export const columns: ColumnDef<Question>[] = [
   },
   {
     header: "Actions",
-    cell: () => <Actions />,
+    cell: ({ row }) => <Actions id={row.original.id} />,
   },
 ];

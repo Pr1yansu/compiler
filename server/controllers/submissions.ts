@@ -24,7 +24,6 @@ export const getSubmissions = async (req: Request, res: Response) => {
       include: {
         user: true,
         problem: true,
-        output: true,
       },
     });
 
@@ -56,7 +55,6 @@ export const getSubmissionById = async (
       include: {
         user: true,
         problem: true,
-        output: true,
       },
     });
 
@@ -85,7 +83,7 @@ export const addSubmission = async (
 
     if (!problemId || !code || !language) {
       return res.status(400).json({
-        message: "Problem ID, code and language are required",
+        message: "Problem ID, code, and language are required",
         error: "MissingFields",
       });
     }
@@ -107,26 +105,27 @@ export const addSubmission = async (
       });
     }
 
-    const { status, output, error } = await executeCode(
-      code,
-      language,
-      problem.answer
-    );
+    const testCases = await db.testCase.findMany({
+      where: {
+        problemId,
+      },
+    });
 
-    if (error) {
-      req.io.emit("error-code", error);
-      return res.status(500).json({
-        message: "Internal server error",
-        exception: "ERROR_EXECUTING_CODE",
-        error,
-      });
-    }
+    const executionResults = await executeCode(code, language, testCases);
 
-    if (!output) {
-      return res.status(400).json({
-        message: "Output is empty",
-        error: "EmptyOutput",
-      });
+    let status: Status = "ACCEPTED";
+    for (const result of executionResults) {
+      if (result.status === "REJECTED") {
+        status = "REJECTED";
+        break;
+      } else if (result.status === "ERROR") {
+        req.io.emit("error-code", result.status);
+        return res.status(500).json({
+          message: "Internal server error",
+          exception: "ERROR_EXECUTING_CODE",
+          error: result.status,
+        });
+      }
     }
 
     const submission = await db.submission.create({
@@ -135,7 +134,7 @@ export const addSubmission = async (
         problemId,
         userId: user.id,
         language,
-        status: status as Status,
+        status,
       },
     });
 
@@ -146,22 +145,32 @@ export const addSubmission = async (
       });
     }
 
-    const outputData = await db.output.create({
-      data: {
-        output,
-        submissionId: submission.id,
+    const allSubmissions = await db.submission.findMany({
+      where: {
+        userId: user.id,
       },
     });
 
-    req.io.emit("show-new-output", outputData);
+    await db.statistic.create({
+      data: {
+        userId: user.id,
+        attempted: allSubmissions.length,
+        solved: allSubmissions.filter((s) => s.status === "ACCEPTED").length,
+        problems: {
+          connect: {
+            id: problemId,
+          },
+        },
+      },
+    });
 
     return res.status(200).json({
       message: "Submission created successfully",
       submission,
-      output: outputData,
     });
   } catch (error) {
     console.log("ERROR_ADDING_SUBMISSION", error);
+    req.io.emit("error-code", error);
     return res.status(500).json({
       message: "Internal server error",
       exception: "ERROR_ADDING_SUBMISSION",
@@ -171,16 +180,7 @@ export const addSubmission = async (
 };
 
 export const updateSubmission = async (
-  req: Request<
-    {
-      id: string;
-    },
-    {},
-    {
-      code: string;
-      language: Language;
-    }
-  >,
+  req: Request<{ id: string }, {}, { code: string; language: Language }>,
   res: Response
 ) => {
   try {
@@ -201,31 +201,39 @@ export const updateSubmission = async (
     });
 
     if (!problem) {
-      return res.status(404).json({ message: "Submission not found" });
+      return res.status(404).json({ message: "Problem not found" });
     }
 
     const { code, language } = req.body;
 
-    const { status, output, error } = await executeCode(
-      code,
-      language,
-      problem.answer
-    );
-
-    if (error) {
-      req.io.emit("error-code", error);
-      return res.status(500).json({
-        message: "Internal server error",
-        exception: "ERROR_EXECUTING_CODE",
-        error,
+    if (!code || !language) {
+      return res.status(400).json({
+        message: "Code and language are required",
+        error: "MissingFields",
       });
     }
 
-    if (!output) {
-      return res.status(400).json({
-        message: "Output is empty",
-        error: "EmptyOutput",
-      });
+    const testCases = await db.testCase.findMany({
+      where: {
+        problemId: id,
+      },
+    });
+
+    const executionResults = await executeCode(code, language, testCases);
+
+    let status: Status = "ACCEPTED";
+    for (const result of executionResults) {
+      if (result.status === "REJECTED") {
+        status = "REJECTED";
+        break;
+      } else if (result.status === "ERROR") {
+        req.io.emit("error-code", result.status);
+        return res.status(500).json({
+          message: "Internal server error",
+          exception: "ERROR_EXECUTING_CODE",
+          error: result.status,
+        });
+      }
     }
 
     const submission = await db.submission.update({
@@ -234,30 +242,11 @@ export const updateSubmission = async (
         userId: user.id,
       },
       data: {
-        status: status as Status,
+        code,
+        language,
+        status,
       },
     });
-
-    const existingOutput = await db.output.findFirst({
-      where: {
-        submissionId: submission.id,
-      },
-    });
-
-    if (!existingOutput) {
-      return res.status(404).json({ message: "Output not found" });
-    }
-
-    const outputData = db.output.update({
-      where: {
-        id: existingOutput.id,
-      },
-      data: {
-        output,
-      },
-    });
-
-    req.io.emit("updated-output", outputData);
 
     return res.status(200).json({
       message: "Submission status updated successfully",
@@ -265,6 +254,7 @@ export const updateSubmission = async (
     });
   } catch (error) {
     console.log("ERROR_UPDATING_SUBMISSION_STATUS", error);
+    req.io.emit("error-code", error);
     return res.status(500).json({
       message: "Internal server error",
       exception: "ERROR_UPDATING_SUBMISSION_STATUS",

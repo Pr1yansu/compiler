@@ -255,9 +255,12 @@ const Register = () => {
               </m.p>
             )}
           </AnimatePresence>
-          <div>
+          <div className="flex justify-end gap-2 text-sm">
             <h4> have an account? </h4>
-            <Link to="/login" className="text-accent hover:underline">
+            <Link
+              to="/login"
+              className="text-primary font-bold hover:underline"
+            >
               Login
             </Link>
           </div>

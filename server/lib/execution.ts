@@ -1,249 +1,149 @@
-import type { Language } from "@prisma/client";
 import { exec } from "child_process";
-import fs from "fs";
+import type { Language, TestCase } from "@prisma/client";
+import fs from "fs/promises";
 
 export const executeCode = async (
   code: string,
   language: Language,
-  answer: string
+  testCases: TestCase[]
 ) => {
   try {
-    switch (language) {
-      case "PYTHON":
-        const pythonResult = await exceutePythonCode(code);
-        if (pythonResult.trim() === answer.trim()) {
-          return {
-            status: "ACCEPTED",
-            output: pythonResult.trim(),
-          };
-        }
-        return {
-          status: "REJECTED",
-        };
-      case "JAVASCRIPT":
-        const javascriptResult = await exceuteJavascriptCode(code);
-        if (javascriptResult.trim() === answer.trim()) {
-          return {
-            status: "ACCEPTED",
-            output: javascriptResult.trim(),
-          };
-        }
-        return {
-          status: "REJECTED",
-        };
-      case "JAVA":
-        const javaResult = await exceuteJavaCode(code);
-        if (javaResult.trim() === answer.trim()) {
-          return {
-            status: "ACCEPTED",
-            output: javaResult.trim(),
-          };
-        }
-        return {
-          status: "REJECTED",
-        };
-      case "C":
-        const cResult = await exceuteCCode(code);
-        if (cResult.trim() === answer.trim()) {
-          return {
-            status: "ACCEPTED",
-            output: cResult.trim(),
-          };
-        }
-        return {
-          status: "REJECTED",
-        };
-      case "CPP":
-        const cppResult = await exceuteCppCode(code);
-        if (cppResult.trim() === answer.trim()) {
-          return {
-            status: "ACCEPTED",
-            output: cppResult.trim(),
-          };
-        }
-        return {
-          status: "REJECTED",
-        };
-      default:
-        console.log("Language not supported");
-        return {
-          status: "ERROR",
-          error: "LANGUAGE_NOT_SUPPORTED",
-        };
+    let results = [];
+
+    for (const testCase of testCases) {
+      const { input, output } = testCase;
+
+      let result;
+      switch (language) {
+        case "PYTHON":
+          result = await executePythonCode(code, input);
+          break;
+        case "JAVASCRIPT":
+          result = await executeJavascriptCode(code, input);
+          break;
+        case "JAVA":
+          result = await executeJavaCode(code, input);
+          break;
+        case "C":
+          result = await executeCCode(code, input);
+          break;
+        case "CPP":
+          result = await executeCppCode(code, input);
+          break;
+        default:
+          throw new Error("Language not supported");
+      }
+
+      if (result.trim() === output.trim()) {
+        results.push({ status: "ACCEPTED", output: result.trim() });
+      } else {
+        results.push({ status: "REJECTED", output: result.trim() });
+      }
     }
+
+    return results;
   } catch (error) {
-    console.log("ERROR_EXECUTING_CODE", error);
-    return {
-      status: "ERROR",
-      error: "ERROR_EXECUTING_CODE",
-    };
+    console.error("ERROR_EXECUTING_CODE", error);
+    return [{ status: "ERROR", error: "ERROR_EXECUTING_CODE", message: error }];
   }
 };
 
-const exceutePythonCode = async (code: string) => {
-  return new Promise<string>((resolve, reject) => {
-    fs.writeFile("main.py", code, (error) => {
-      if (error) {
-        reject(error);
-      }
+const executePythonCode = async (
+  code: string,
+  input: string
+): Promise<string> => {
+  try {
+    await fs.writeFile("main.py", code);
+    const { stdout, stderr } = await execPromise(`python main.py`, input);
+    await fs.unlink("main.py");
 
-      exec("python main.py", (error, stdout, stderr) => {
-        if (error) {
-          reject(error);
-          fs.unlink("main.py", (error) => {
-            if (error) {
-              console.log("ERROR_DELETING_PY_FILE", error);
-            }
-          });
-        }
-
-        resolve(stdout);
-        fs.unlink("main.py", (error) => {
-          if (error) {
-            console.log("ERROR_DELETING_PY_FILE", error);
-          }
-        });
-      });
-    });
-  });
+    if (stderr) throw new Error(stderr);
+    return stdout;
+  } catch (error) {
+    throw new Error(`Python execution error: ${error}`);
+  }
 };
 
-const exceuteJavascriptCode = async (code: string) => {
-  return new Promise<string>((resolve, reject) => {
-    fs.writeFile("main.js", code, (error) => {
-      if (error) {
-        reject(error);
-      }
+const executeJavascriptCode = async (
+  code: string,
+  input: string
+): Promise<string> => {
+  try {
+    await fs.writeFile("main.js", code);
+    const { stdout, stderr } = await execPromise(`node main.js`, input);
+    await fs.unlink("main.js");
 
-      exec("node main.js", (error, stdout, stderr) => {
-        if (error) {
-          reject(error);
-          fs.unlink("main.js", (error) => {
-            if (error) {
-              console.log("ERROR_DELETING_JS_FILE", error);
-            }
-          });
-        }
-
-        resolve(stdout);
-        fs.unlink("main.js", (error) => {
-          if (error) {
-            console.log("ERROR_DELETING_JS_FILE", error);
-          }
-        });
-      });
-    });
-  });
+    if (stderr) throw new Error(stderr);
+    return stdout;
+  } catch (error) {
+    throw new Error(`JavaScript execution error: ${error}`);
+  }
 };
 
-const exceuteJavaCode = async (code: string) => {
-  return new Promise<string>((resolve, reject) => {
-    fs.writeFile("Main.java", code, (error) => {
-      if (error) {
-        reject(error);
-      }
+const executeJavaCode = async (
+  code: string,
+  input: string
+): Promise<string> => {
+  try {
+    await fs.writeFile("Main.java", code);
+    await execPromise(`javac Main.java`);
+    const { stdout, stderr } = await execPromise(`java Main`, input);
+    await fs.unlink("Main.java");
+    await fs.unlink("Main.class");
 
-      exec("javac Main.java", (error, stdout, stderr) => {
-        if (error) {
-          reject(error);
-        }
-
-        exec("java Main", (error, stdout, stderr) => {
-          if (error) {
-            reject(error);
-            fs.unlink("Main.java", (error) => {
-              if (error) {
-                console.log("ERROR_DELETING_JAVA_FILE", error);
-              }
-            });
-          }
-
-          resolve(stdout);
-          fs.unlink("Main.class", (error) => {
-            if (error) {
-              console.log("ERROR_DELETING_CLASS_FILE", error);
-            }
-          });
-        });
-      });
-    });
-  });
+    if (stderr) throw new Error(stderr);
+    return stdout;
+  } catch (error) {
+    throw new Error(`Java execution error: ${error}`);
+  }
 };
 
-const exceuteCCode = async (code: string) => {
-  return new Promise<string>((resolve, reject) => {
-    fs.writeFile("main.c", code, (error) => {
-      if (error) {
-        reject(error);
-      }
+const executeCCode = async (code: string, input: string): Promise<string> => {
+  try {
+    await fs.writeFile("main.c", code);
+    await execPromise(`gcc main.c -o main`);
+    const { stdout, stderr } = await execPromise(`./main`, input);
+    await fs.unlink("main.c");
+    await fs.unlink("main");
 
-      exec("gcc main.c -o main", (error, stdout, stderr) => {
-        if (error) {
-          reject(error);
-          fs.unlink("main.c", (error) => {
-            if (error) {
-              console.log("ERROR_DELETING_C_FILE", error);
-            }
-          });
-        }
-
-        exec("./main", (error, stdout, stderr) => {
-          if (error) {
-            reject(error);
-            fs.unlink("main", (error) => {
-              if (error) {
-                console.log("ERROR_DELETING_C_FILE", error);
-              }
-            });
-          }
-
-          resolve(stdout);
-          fs.unlink("main.c", (error) => {
-            if (error) {
-              console.log("ERROR_DELETING_C_FILE", error);
-            }
-          });
-        });
-      });
-    });
-  });
+    if (stderr) throw new Error(stderr);
+    return stdout;
+  } catch (error) {
+    throw new Error(`C execution error: ${error}`);
+  }
 };
 
-const exceuteCppCode = async (code: string) => {
-  return new Promise<string>((resolve, reject) => {
-    fs.writeFile("main.cpp", code, (error) => {
+const executeCppCode = async (code: string, input: string): Promise<string> => {
+  try {
+    await fs.writeFile("main.cpp", code);
+    await execPromise(`g++ main.cpp -o main`);
+    const { stdout, stderr } = await execPromise(`./main`, input);
+    await fs.unlink("main.cpp");
+    await fs.unlink("main");
+
+    if (stderr) throw new Error(stderr);
+    return stdout;
+  } catch (error) {
+    throw new Error(`C++ execution error: ${error}`);
+  }
+};
+
+const execPromise = (
+  command: string,
+  input: string = ""
+): Promise<{ stdout: string; stderr: string }> => {
+  return new Promise((resolve, reject) => {
+    const process = exec(command, (error, stdout, stderr) => {
       if (error) {
-        reject(error);
+        reject({ stdout, stderr });
+      } else {
+        resolve({ stdout, stderr });
       }
-
-      exec("g++ main.cpp -o main", (error, stdout, stderr) => {
-        if (error) {
-          reject(error);
-          fs.unlink("main.cpp", (error) => {
-            if (error) {
-              console.log("ERROR_DELETING_CPP_FILE", error);
-            }
-          });
-        }
-
-        exec("./main", (error, stdout, stderr) => {
-          if (error) {
-            reject(error);
-            fs.unlink("main", (error) => {
-              if (error) {
-                console.log("ERROR_DELETING_CPP_FILE", error);
-              }
-            });
-          }
-
-          resolve(stdout);
-          fs.unlink("main.cpp", (error) => {
-            if (error) {
-              console.log("ERROR_DELETING_CPP_FILE", error);
-            }
-          });
-        });
-      });
     });
+
+    if (input && process && process.stdin) {
+      process.stdin.write(input);
+      process.stdin.end();
+    }
   });
 };

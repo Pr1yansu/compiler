@@ -22,7 +22,7 @@ const Home: React.FC<Props> = ({ data }) => {
         className="rounded-lg border min-h-screen"
       >
         <ResizablePanel>
-          <Question />
+          <Question data={data} />
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel>

@@ -1,5 +1,10 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { Question, QuestionResponse } from "@/types/question";
+import {
+  Question,
+  QuestionPostResponse,
+  QuestionResponse,
+  QuestionResponseID,
+} from "@/types/question";
 
 export const questionApi = createApi({
   reducerPath: "questionApi",
@@ -11,14 +16,46 @@ export const questionApi = createApi({
     getQuestions: builder.query<QuestionResponse, void>({
       query: () => "/user/problems",
     }),
-    addQuestion: builder.mutation<Question, Partial<Question>>({
+    getQuestionById: builder.query<QuestionResponseID, string>({
+      query: (id) => ({
+        url: `/user/problem/${id}`,
+      }),
+    }),
+    addQuestion: builder.mutation<QuestionPostResponse, Partial<Question>>({
       query: (body) => ({
         url: "/admin/add/coding/problem",
         method: "POST",
         body,
       }),
     }),
+    updateQuestion: builder.mutation<QuestionPostResponse, Partial<Question>>({
+      query: ({
+        answer,
+        createdAt,
+        description,
+        difficulty,
+        tags,
+        title,
+        id,
+      }) => ({
+        url: `/admin/update/problem/${id}`,
+        method: "PUT",
+        body: { answer, createdAt, description, difficulty, tags, title },
+      }),
+    }),
+    deleteQuestion: builder.mutation<QuestionPostResponse, string>({
+      query: (id) => ({
+        url: `/admin/delete/problem/${id}`,
+        method: "DELETE",
+      }),
+    }),
   }),
 });
 
-export const { useGetQuestionsQuery, useAddQuestionMutation } = questionApi;
+export const {
+  useGetQuestionsQuery,
+  useAddQuestionMutation,
+  useGetQuestionByIdQuery,
+  useUpdateQuestionMutation,
+  useDeleteQuestionMutation,
+} = questionApi;

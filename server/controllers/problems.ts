@@ -1,7 +1,7 @@
 import { db } from "../lib/db";
 import Cache from "node-cache";
 import { filterProblems } from "../lib/filter";
-import type { Difficulty } from "@prisma/client";
+import type { Difficulty, TestCase } from "@prisma/client";
 import type { Request, Response } from "express";
 import type { codingProblem } from "@prisma/client";
 
@@ -12,27 +12,41 @@ const cache = new Cache({
 });
 
 export const addProblem = async (
-  req: Request<{}, {}, codingProblem>,
+  req: Request<{}, {}, codingProblem & { testCases: TestCase[] }>,
   res: Response
 ) => {
   try {
-    const { answer, description, difficulty, title, tags } = req.body;
+    const { description, difficulty, title, tags, testCases } = req.body;
 
-    if (!answer || !description || !difficulty || !title || !tags) {
+    if (!description || !difficulty || !title || !tags || !testCases) {
       return res.status(400).json({
         message: "Please provide all required fields",
         error: "MissingFields",
       });
     }
 
+    if (testCases.length <= 0) {
+      return res.status(400).json({
+        message: "Please provide at least one test case",
+        error: "MissingFields",
+      });
+    }
+
     const problem = await db.codingProblem.create({
       data: {
-        answer,
         description,
         difficulty,
         title,
         tags,
       },
+    });
+
+    await db.testCase.createMany({
+      data: testCases.map((testCase) => ({
+        input: testCase.input,
+        output: testCase.output,
+        problemId: problem.id,
+      })),
     });
 
     return res.status(201).json({ message: "Problem added", problem });
@@ -47,12 +61,12 @@ export const addProblem = async (
 };
 
 export const updateProblem = async (
-  req: Request<{ id: string }, {}, codingProblem>,
+  req: Request<{ id: string }, {}, codingProblem & TestCase>,
   res: Response
 ) => {
   try {
     const { id } = req.params;
-    const { answer, description, difficulty, title, tags } = req.body;
+    const { input, output, description, difficulty, title, tags } = req.body;
 
     const existingProblem = await db.codingProblem.findUnique({
       where: {
@@ -69,13 +83,34 @@ export const updateProblem = async (
         id: id,
       },
       data: {
-        answer: answer || existingProblem.answer,
         description: description || existingProblem.description,
         difficulty: difficulty || existingProblem.difficulty,
         title: title || existingProblem.title,
         tags: tags || existingProblem.tags,
       },
     });
+
+    const existingTestCase = await db.testCase.findFirst({
+      where: {
+        problemId: id,
+      },
+    });
+
+    if (!existingTestCase) {
+      return res.status(404).json({ message: "Test case not found" });
+    }
+
+    await db.testCase.update({
+      where: {
+        id: existingTestCase.id,
+      },
+      data: {
+        input: input || existingTestCase.input,
+        output: output || existingTestCase.output,
+      },
+    });
+
+    cache.del("problems");
 
     return res.status(200).json({ message: "Problem updated", problem });
   } catch (error) {
@@ -100,6 +135,8 @@ export const deleteProblem = async (
         id: id,
       },
     });
+
+    cache.del("problems");
 
     return res.status(200).json({ message: "Problem deleted" });
   } catch (error) {
@@ -241,43 +278,5 @@ export const updateProblemTags = async (
     return res.status(200).json({ message: "Problem tags updated", problem });
   } catch (error) {
     console.log("ERROR_UPDATING_PROBLEM_TAGS", error);
-  }
-};
-
-export const updateProblemAnswer = async (
-  req: Request<
-    {
-      id: string;
-    },
-    {},
-    {
-      answer: string;
-    }
-  >,
-  res: Response
-) => {
-  try {
-    const { id } = req.params;
-    const { answer } = req.body;
-
-    if (!answer) {
-      return res.status(400).json({
-        message: "Please provide answer",
-        error: "MissingFields",
-      });
-    }
-
-    const problem = await db.codingProblem.update({
-      where: {
-        id: id,
-      },
-      data: {
-        answer,
-      },
-    });
-
-    return res.status(200).json({ message: "Problem answer updated", problem });
-  } catch (error) {
-    console.log("ERROR_UPDATING_PROBLEM_ANSWER", error);
   }
 };

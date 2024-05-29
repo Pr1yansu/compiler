@@ -2,8 +2,10 @@ import express from "express";
 import { isAuth } from "../middleware/auth";
 import {
   addUser,
+  deleteUser,
   profile,
   resendVerification,
+  updateUser,
   verifyAdmin,
 } from "../controllers/user";
 import passport from "../lib/passport";
@@ -61,6 +63,8 @@ router.post(
 router.get("/profile", isAuth, profile);
 router.get("/problem/:id", isAuth, getProblemById);
 router.get("/problems", isAuth, getProblems);
+router.put("/profile/update", isAuth, updateUser);
+router.delete("/profile/delete", isAuth, deleteUser);
 
 router.get("/logout", (req: Request, res: Response) => {
   req.logout((err) => {

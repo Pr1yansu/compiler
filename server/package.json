@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "start": "bun run app.ts",
-    "dev": "bun --hot app.ts"
+    "dev": "bun --hot app.ts",
+    "postinstall": "bunx prisma db push"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

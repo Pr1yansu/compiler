@@ -344,3 +344,213 @@ export const profile = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal server error", error: error });
   }
 };
+
+export const updateUser = async (
+  req: Request<
+    {},
+    {},
+    {
+      email?: string;
+      name?: string;
+      image?: string;
+      password?: string;
+      role?: string;
+    }
+  >,
+  res: Response
+) => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      return res.status(400).json({
+        message: "User not found",
+        error: "UserNotFound",
+      });
+    }
+
+    const { id } = user;
+
+    const { email, name, image, password } = req.body;
+
+    if (!email && !name && !image && !password) {
+      return res.status(400).json({
+        message: "Please provide at least one field to update",
+        error: "MissingFields",
+      });
+    }
+
+    const updatedUser = await db.user.update({
+      where: { id, role: "USER" },
+      data: {
+        email,
+        name,
+        image,
+        password,
+      },
+    });
+
+    cache.set(`user-${id}`, updatedUser, 60 * 60);
+
+    return res.status(200).json({
+      message: "User updated successfully",
+      updatedUser,
+      error: null,
+    });
+  } catch (error) {
+    console.log("ERROR_UPDATING_USER", error);
+    res.status(500).json({ message: "Internal server error", error: error });
+  }
+};
+
+export const deleteUser = async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      return res.status(400).json({
+        message: "User not found",
+        error: "UserNotFound",
+      });
+    }
+
+    const { id } = user;
+
+    await db.user.delete({
+      where: { id, role: "USER" },
+    });
+
+    cache.del(`user-${id}`);
+
+    return res.status(200).json({
+      message: "User deleted successfully",
+      error: null,
+    });
+  } catch (error) {
+    console.log("ERROR_DELETING_USER", error);
+    res.status(500).json({ message: "Internal server error", error: error });
+  }
+};
+
+export const updateAdmin = async (
+  req: Request<
+    {},
+    {},
+    {
+      email?: string;
+      name?: string;
+      image?: string;
+      password?: string;
+      role?: string;
+    }
+  >,
+  res: Response
+) => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      return res.status(400).json({
+        message: "User not found",
+        error: "UserNotFound",
+      });
+    }
+
+    const { id } = user;
+
+    const { email, name, image, password } = req.body;
+
+    if (!email && !name && !image && !password) {
+      return res.status(400).json({
+        message: "Please provide at least one field to update",
+        error: "MissingFields",
+      });
+    }
+
+    const updatedUser = await db.user.update({
+      where: { id, role: "ADMIN" },
+      data: {
+        email,
+        name,
+        image,
+        password,
+      },
+    });
+
+    cache.set(`user-${id}`, updatedUser, 60 * 60);
+
+    return res.status(200).json({
+      message: "User updated successfully",
+      updatedUser,
+      error: null,
+    });
+  } catch (error) {
+    console.log("ERROR_UPDATING_USER", error);
+    res.status(500).json({ message: "Internal server error", error: error });
+  }
+};
+
+export const deleteAdmin = async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      return res.status(400).json({
+        message: "User not found",
+        error: "UserNotFound",
+      });
+    }
+
+    const { id } = user;
+
+    await db.user.delete({
+      where: { id, role: "ADMIN" },
+    });
+
+    cache.del(`user-${id}`);
+
+    return res.status(200).json({
+      message: "User deleted successfully",
+      error: null,
+    });
+  } catch (error) {
+    console.log("ERROR_DELETING_USER", error);
+    res.status(500).json({ message: "Internal server error", error: error });
+  }
+};
+
+export const removeUser = async (
+  req: Request<
+    {
+      id: string;
+    },
+    {},
+    {}
+  >,
+  res: Response
+) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        message: "Please provide an id",
+        error: "MissingId",
+      });
+    }
+
+    await db.user.delete({
+      where: { id },
+    });
+
+    cache.del(`user-${id}`);
+
+    return res.status(200).json({
+      message: "User deleted successfully",
+      error: null,
+    });
+  } catch (error) {
+    console.log("ERROR_DELETING_USER", error);
+    res.status(500).json({ message: "Internal server error", error: error });
+  }
+};

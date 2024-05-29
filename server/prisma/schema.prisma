@@ -19,6 +19,7 @@ model User {
   createdAt         DateTime            @default(now())
   AdminVerification AdminVerification[]
   Submission        Submission[]
+  Statistic         Statistic[]
 }
 
 model AdminVerification {
@@ -35,10 +36,21 @@ model codingProblem {
   title       String
   description String
   difficulty  Difficulty
-  answer      String
   tags        String[]
   createdAt   DateTime     @default(now())
   Submission  Submission[]
+  Statistic   Statistic?   @relation(fields: [statisticId], references: [id])
+  statisticId String?      @db.ObjectId
+  TestCase    TestCase[]
+}
+
+model TestCase {
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  problemId String        @map("_problemId") @db.ObjectId
+  problem   codingProblem @relation(fields: [problemId], references: [id])
+  input     String
+  output    String
+  createdAt DateTime      @default(now())
 }
 
 model Submission {
@@ -48,18 +60,19 @@ model Submission {
   problemId String        @map("_problemId") @db.ObjectId
   problem   codingProblem @relation(fields: [problemId], references: [id])
   code      String
-  output    Output[]
   language  Language
   status    Status
   createdAt DateTime      @default(now())
 }
 
-model Output {
-  id           String     @id @default(auto()) @map("_id") @db.ObjectId
-  submission   Submission @relation(fields: [submissionId], references: [id])
-  submissionId String     @map("_submissionId") @db.ObjectId
-  output       String
-  createdAt    DateTime   @default(now())
+model Statistic {
+  id        String          @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String          @map("_userId") @db.ObjectId
+  user      User            @relation(fields: [userId], references: [id])
+  problems  codingProblem[]
+  solved    Int
+  attempted Int
+  createdAt DateTime        @default(now())
 }
 
 enum Difficulty {

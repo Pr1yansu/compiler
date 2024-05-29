@@ -60,6 +60,15 @@ export const filterProblems = async (filters: problemQuery) => {
     },
     skip: page ? (page - 1) * (limit || 10) : undefined,
     take: limit || 10,
+    include: {
+      Submission: true,
+      TestCase: true,
+      _count: {
+        select: {
+          Submission: true,
+        },
+      },
+    },
   });
 
   if (!problems) {
