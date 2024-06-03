@@ -26,7 +26,9 @@ const Questions = () => {
 
   return (
     <div className="container mx-auto py-6 space-y-4">
-      <h4 className="text-2xl font-bold text-gray-700 ">All Questions</h4>
+      <h4 className="text-2xl font-bold text-gray-700 dark:text-foreground">
+        All Questions
+      </h4>
       <DataTable
         data={data && data.problems ? data.problems : []}
         columns={columns}

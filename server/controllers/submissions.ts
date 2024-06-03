@@ -113,8 +113,12 @@ export const addSubmission = async (
 
     const executionResults = await executeCode(code, language, testCases);
 
+    const resultsArray = Array.isArray(executionResults)
+      ? executionResults
+      : [executionResults];
+
     let status: Status = "ACCEPTED";
-    for (const result of executionResults) {
+    for (const result of resultsArray) {
       if (result.status === "REJECTED") {
         status = "REJECTED";
         break;
@@ -221,8 +225,12 @@ export const updateSubmission = async (
 
     const executionResults = await executeCode(code, language, testCases);
 
+    const resultsArray = Array.isArray(executionResults)
+      ? executionResults
+      : [executionResults];
+
     let status: Status = "ACCEPTED";
-    for (const result of executionResults) {
+    for (const result of resultsArray) {
       if (result.status === "REJECTED") {
         status = "REJECTED";
         break;

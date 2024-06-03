@@ -93,6 +93,7 @@ enum Status {
   PENDING
   ACCEPTED
   REJECTED
+  ERROR
 }
 
 enum Role {
