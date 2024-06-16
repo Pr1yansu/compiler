@@ -30,7 +30,7 @@ export const questionApi = createApi({
     }),
     updateQuestion: builder.mutation<QuestionPostResponse, Partial<Question>>({
       query: ({
-        answer,
+        testCases,
         createdAt,
         description,
         difficulty,
@@ -40,7 +40,7 @@ export const questionApi = createApi({
       }) => ({
         url: `/admin/update/problem/${id}`,
         method: "PUT",
-        body: { answer, createdAt, description, difficulty, tags, title },
+        body: { testCases, createdAt, description, difficulty, tags, title },
       }),
     }),
     deleteQuestion: builder.mutation<QuestionPostResponse, string>({

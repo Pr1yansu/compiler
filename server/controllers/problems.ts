@@ -130,9 +130,27 @@ export const deleteProblem = async (
   try {
     const { id } = req.params;
 
+    if (!id) {
+      return res.status(400).json({
+        message: "Please provide problem id",
+        error: "MissingFields",
+      });
+    }
+
+    await db.testCase.deleteMany({
+      where: {
+        problemId: id,
+      },
+    });
+
     await db.codingProblem.delete({
       where: {
         id: id,
+      },
+      include: {
+        TestCase: true,
+        Statistic: true,
+        Submission: true,
       },
     });
 

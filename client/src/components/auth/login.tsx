@@ -144,7 +144,7 @@ const Login = () => {
           <AnimatePresence>
             {error && (
               <m.p
-                className="text-red-500 text-sm text-center bg-red-500/20 p-2 rounded-md font-semibold"
+                className="text-red-500 text-sm text-center bg-red-500/20 p-2 rounded-md font-semibold dark:bg-red-500/30 dark:text-red-400"
                 initial={{ opacity: 0, x: "-50%" }}
                 animate={{ opacity: 1, x: "0%" }}
                 exit={{ opacity: 0, x: "-50%" }}
@@ -165,7 +165,7 @@ const Login = () => {
         </CardContent>
         <CardFooter className="flex-wrap gap-2">
           <Button
-            className="w-full text-zinc-700"
+            className="w-full text-zinc-700 dark:text-zinc-300"
             variant={"outline"}
             disabled={loading}
             onClick={handleEmailLogin}
@@ -194,7 +194,7 @@ const Login = () => {
             <FcGoogle className="w-5 h-5 ml-2" />
           </Button>
           <Button
-            className="w-full bg-gray-800 hover:bg-gray-800/90"
+            className="w-full bg-gray-800 hover:bg-gray-800/90 dark:bg-gray-900 dark:hover:bg-gray-900/50 text-white dark:text-white/90"
             disabled={loading}
             onClick={handleGithubLogin}
           >

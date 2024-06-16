@@ -1,149 +1,112 @@
 import { exec } from "child_process";
 import type { Language, TestCase } from "@prisma/client";
 import fs from "fs/promises";
+import { templates } from "./templates";
 
 export const executeCode = async (
   code: string,
   language: Language,
-  testCases: TestCase[]
+  testCases: TestCase[],
+  userId: string
 ) => {
-  try {
-    let results = [];
+  const languageExecutors = {
+    PYTHON: executePythonCode,
+    JAVASCRIPT: executeJavascriptCode,
+    JAVA: executeJavaCode,
+    C: executeCCode,
+    CPP: executeCppCode,
+  };
 
-    for (const testCase of testCases) {
+  if (!languageExecutors[language]) {
+    throw new Error("Language not supported");
+  }
+
+  const template = templates[language](code);
+
+  return Promise.all(
+    testCases.map(async (testCase) => {
       const { input, output } = testCase;
-
-      let result;
-      switch (language) {
-        case "PYTHON":
-          result = await executePythonCode(code, input);
-          break;
-        case "JAVASCRIPT":
-          result = await executeJavascriptCode(code, input);
-          break;
-        case "JAVA":
-          result = await executeJavaCode(code, input);
-          break;
-        case "C":
-          result = await executeCCode(code, input);
-          break;
-        case "CPP":
-          result = await executeCppCode(code, input);
-          break;
-        default:
-          throw new Error("Language not supported");
-      }
-
-      if (result.trim() === output.trim()) {
-        results.push({ status: "ACCEPTED", output: result.trim() });
-      } else {
-        results.push({ status: "REJECTED", output: result.trim() });
-      }
-    }
-
-    return results;
-  } catch (error) {
-    console.error("ERROR_EXECUTING_CODE", error);
-    return [{ status: "ERROR", error: "ERROR_EXECUTING_CODE", message: error }];
-  }
+      const result = await languageExecutors[language](template, input, userId);
+      return result.trim() === output.trim()
+        ? { status: "ACCEPTED", output: result.trim() }
+        : { status: "REJECTED", output: result.trim() };
+    })
+  ).catch((error) => {
+    return { status: "ERROR", output: error.message };
+  });
 };
 
-const executePythonCode = async (
-  code: string,
-  input: string
-): Promise<string> => {
-  try {
-    await fs.writeFile("main.py", code);
-    const { stdout, stderr } = await execPromise(`python main.py`, input);
-    await fs.unlink("main.py");
-
-    if (stderr) throw new Error(stderr);
-    return stdout;
-  } catch (error) {
-    throw new Error(`Python execution error: ${error}`);
-  }
-};
-
-const executeJavascriptCode = async (
-  code: string,
-  input: string
-): Promise<string> => {
-  try {
-    await fs.writeFile("main.js", code);
-    const { stdout, stderr } = await execPromise(`node main.js`, input);
-    await fs.unlink("main.js");
-
-    if (stderr) throw new Error(stderr);
-    return stdout;
-  } catch (error) {
-    throw new Error(`JavaScript execution error: ${error}`);
-  }
-};
-
-const executeJavaCode = async (
-  code: string,
-  input: string
-): Promise<string> => {
-  try {
-    await fs.writeFile("Main.java", code);
-    await execPromise(`javac Main.java`);
-    const { stdout, stderr } = await execPromise(`java Main`, input);
-    await fs.unlink("Main.java");
-    await fs.unlink("Main.class");
-
-    if (stderr) throw new Error(stderr);
-    return stdout;
-  } catch (error) {
-    throw new Error(`Java execution error: ${error}`);
-  }
-};
-
-const executeCCode = async (code: string, input: string): Promise<string> => {
-  try {
-    await fs.writeFile("main.c", code);
-    await execPromise(`gcc main.c -o main`);
-    const { stdout, stderr } = await execPromise(`./main`, input);
-    await fs.unlink("main.c");
-    await fs.unlink("main");
-
-    if (stderr) throw new Error(stderr);
-    return stdout;
-  } catch (error) {
-    throw new Error(`C execution error: ${error}`);
-  }
-};
-
-const executeCppCode = async (code: string, input: string): Promise<string> => {
-  try {
-    await fs.writeFile("main.cpp", code);
-    await execPromise(`g++ main.cpp -o main`);
-    const { stdout, stderr } = await execPromise(`./main`, input);
-    await fs.unlink("main.cpp");
-    await fs.unlink("main");
-
-    if (stderr) throw new Error(stderr);
-    return stdout;
-  } catch (error) {
-    throw new Error(`C++ execution error: ${error}`);
-  }
-};
-
-const execPromise = (
-  command: string,
-  input: string = ""
-): Promise<{ stdout: string; stderr: string }> => {
+const execPromise = (command: string, input: string = ""): Promise<string> => {
   return new Promise((resolve, reject) => {
     const process = exec(command, (error, stdout, stderr) => {
-      if (error) {
-        reject({ stdout, stderr });
-      } else {
-        resolve({ stdout, stderr });
-      }
+      if (error || stderr) return reject(stderr || error);
+      resolve(stdout);
     });
 
-    if (input && process && process.stdin) {
+    if (input && process.stdin) {
       process.stdin.write(input);
       process.stdin.end();
     }
   });
+};
+
+const executePythonCode = async (
+  code: string,
+  input: string,
+  userId: string
+): Promise<string> => {
+  await fs.writeFile(`main-${userId}.py`, code);
+  const output = await execPromise(`python main-${userId}.py`, input);
+  await fs.unlink("main-${userId}.py");
+  return output;
+};
+
+const executeJavascriptCode = async (
+  code: string,
+  input: string,
+  userId: string
+): Promise<string> => {
+  await fs.writeFile(`main-${userId}.js`, code);
+  const output = await execPromise(`node main-${userId}.js`, input);
+  await fs.unlink("main.js");
+  return output;
+};
+
+const executeJavaCode = async (
+  code: string,
+  input: string,
+  userId: string
+): Promise<string> => {
+  await fs.writeFile(`Main-${userId}.java`, code);
+  await execPromise(`javac Main-${userId}.java`);
+  const output = await execPromise(`java Main-${userId}`, input);
+  await fs.unlink(`Main-${userId}.java`);
+  await fs.unlink(`Main-${userId}.class`);
+  return output;
+};
+
+const executeCCode = async (
+  code: string,
+  input: string,
+  userId: string
+): Promise<string> => {
+  await fs.writeFile("main.c", code);
+  await execPromise("gcc main.c -o main");
+  const output = await execPromise("./main", input);
+  await fs.unlink("main.c");
+  await fs.unlink("main");
+  return output;
+};
+
+const executeCppCode = async (
+  code: string,
+  input: string,
+  userId: string
+): Promise<string> => {
+  await fs.writeFile("main.cpp", code);
+  await execPromise("g++ main.cpp -o main");
+  const output = await execPromise("./main", input);
+  await fs.unlink("main.cpp");
+  await fs.unlink("main");
+  return output;
 };

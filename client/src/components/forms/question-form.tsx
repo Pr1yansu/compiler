@@ -100,8 +100,12 @@ const QuestionForm = () => {
           tagsArray.push(tag.trim());
         });
       }
+      const testCases = values.testCases.filter(
+        (testCase) => testCase.input && testCase.output
+      );
       const newValue = {
         ...values,
+        testCases,
         tags: tagsArray,
       };
 
@@ -215,7 +219,7 @@ const QuestionForm = () => {
         />
         <div className="flex items-center justify-between">
           <TestCasesModal
-            form={QuestionFormSchema}
+            form={form}
             fields={fields}
             append={append}
             remove={remove}
