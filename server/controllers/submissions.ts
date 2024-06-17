@@ -111,7 +111,12 @@ export const addSubmission = async (
       },
     });
 
-    const executionResults = await executeCode(code, language, testCases);
+    const executionResults = await executeCode(
+      code,
+      language,
+      testCases,
+      user.id
+    );
 
     const resultsArray = Array.isArray(executionResults)
       ? executionResults
@@ -223,7 +228,12 @@ export const updateSubmission = async (
       },
     });
 
-    const executionResults = await executeCode(code, language, testCases);
+    const executionResults = await executeCode(
+      code,
+      language,
+      testCases,
+      user.id
+    );
 
     const resultsArray = Array.isArray(executionResults)
       ? executionResults

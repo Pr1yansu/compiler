@@ -63,6 +63,7 @@ export const filterProblems = async (filters: problemQuery) => {
     include: {
       Submission: true,
       TestCase: true,
+      Statistic: true,
       _count: {
         select: {
           Submission: true,

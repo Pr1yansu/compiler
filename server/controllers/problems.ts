@@ -49,6 +49,8 @@ export const addProblem = async (
       })),
     });
 
+    cache.del("problems");
+
     return res.status(201).json({ message: "Problem added", problem });
   } catch (error) {
     console.log("ERROR_ADDING_PROBLEM", error);
@@ -205,6 +207,9 @@ export const getProblemById = async (
     const problem = await db.codingProblem.findUnique({
       where: {
         id: id,
+      },
+      include: {
+        TestCase: true,
       },
     });
     if (!problem) {

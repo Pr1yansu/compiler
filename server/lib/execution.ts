@@ -57,7 +57,7 @@ const executePythonCode = async (
 ): Promise<string> => {
   await fs.writeFile(`main-${userId}.py`, code);
   const output = await execPromise(`python main-${userId}.py`, input);
-  await fs.unlink("main-${userId}.py");
+  await fs.unlink(`main-${userId}.py`);
   return output;
 };
 
@@ -68,7 +68,7 @@ const executeJavascriptCode = async (
 ): Promise<string> => {
   await fs.writeFile(`main-${userId}.js`, code);
   const output = await execPromise(`node main-${userId}.js`, input);
-  await fs.unlink("main.js");
+  await fs.unlink(`main-${userId}.js`);
   return output;
 };
 
@@ -90,11 +90,10 @@ const executeCCode = async (
   input: string,
   userId: string
 ): Promise<string> => {
-  await fs.writeFile("main.c", code);
-  await execPromise("gcc main.c -o main");
-  const output = await execPromise("./main", input);
-  await fs.unlink("main.c");
-  await fs.unlink("main");
+  await fs.writeFile(`main-${userId}.c`, code);
+  await execPromise(`gcc main-${userId}.c -o main-${userId}`);
+  const output = await execPromise(`./main-${userId}`, input);
+  await fs.unlink(`main-${userId}.c`);
   return output;
 };
 
@@ -103,10 +102,9 @@ const executeCppCode = async (
   input: string,
   userId: string
 ): Promise<string> => {
-  await fs.writeFile("main.cpp", code);
-  await execPromise("g++ main.cpp -o main");
-  const output = await execPromise("./main", input);
-  await fs.unlink("main.cpp");
-  await fs.unlink("main");
+  await fs.writeFile(`main-${userId}.cpp`, code);
+  await execPromise(`g++ main-${userId}.cpp -o main-${userId}`);
+  const output = await execPromise(`./main-${userId}`, input);
+  await fs.unlink(`main-${userId}.cpp`);
   return output;
 };

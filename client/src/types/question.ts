@@ -5,7 +5,7 @@ export type Question = {
   difficulty: "EASY" | "MEDIUM" | "HARD";
   tags: string[];
   createdAt: string;
-  testCases: TestCase[];
+  TestCase: TestCase[];
 };
 
 export type TestCase = {

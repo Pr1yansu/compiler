@@ -86,9 +86,9 @@ const QuestionForm = () => {
       form.setValue("description", question.problem.description);
       form.setValue("difficulty", question.problem.difficulty);
       form.setValue("tags", question.problem.tags.join(","));
-      form.setValue("testCases", question.problem.testCases);
+      form.setValue("testCases", question.problem.TestCase);
     }
-  }, [question, questionId]);
+  }, [question, questionId, form]);
 
   async function onSubmit(values: z.infer<typeof QuestionFormSchema>) {
     try {

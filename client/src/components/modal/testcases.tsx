@@ -36,13 +36,25 @@ const TestCasesModal = ({
     if (fields.length > 0) {
       setCurrentTestCaseIndex(fields.length - 1);
     }
-  }, [fields]);
+  }, [fields, setCurrentTestCaseIndex]);
 
   if (!isTestCasesModalOpen || currentTestCaseIndex === -1) return null;
 
+  const handleNext = () => {
+    if (currentTestCaseIndex < fields.length - 1) {
+      setCurrentTestCaseIndex(currentTestCaseIndex + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentTestCaseIndex > 0) {
+      setCurrentTestCaseIndex(currentTestCaseIndex - 1);
+    }
+  };
+
   return (
     <div
-      className="fixed -inset-full dark:bg-black/80 bg-black/40 flex justify-center items-center p-2"
+      className="fixed inset-0 dark:bg-black/80 bg-black/40 flex justify-center items-center p-2"
       onClick={closeTestCasesModal}
     >
       <div
@@ -59,7 +71,7 @@ const TestCasesModal = ({
           </button>
         </div>
         <FormLabel>
-          Test Case {currentTestCaseIndex + 1}{" "}
+          Test Case {currentTestCaseIndex + 1} of {fields.length}{" "}
           <span className="text-red-500">*</span>
         </FormLabel>
         <FormField
@@ -100,29 +112,41 @@ const TestCasesModal = ({
             </FormItem>
           )}
         />
+
+        {fields.length > 0 && (
+          <div className="flex space-x-2">
+            <Button type="button" onClick={handlePrev} size={"sm"}>
+              Previous
+            </Button>
+            <Button type="button" onClick={handleNext} size={"sm"}>
+              Next
+            </Button>
+          </div>
+        )}
         <div className="flex items-center justify-between">
-          <Button
-            type="button"
-            onClick={() => {
-              remove(currentTestCaseIndex);
-              setCurrentTestCaseIndex(-1);
-            }}
-            size={"sm"}
-            variant={"destructive"}
-          >
-            Remove Test Case
-          </Button>
+          {fields.length > 0 && (
+            <Button
+              type="button"
+              onClick={() => {
+                remove(currentTestCaseIndex);
+                setCurrentTestCaseIndex(currentTestCaseIndex - 1);
+              }}
+              size={"sm"}
+              variant={"destructive"}
+            >
+              Remove Test Case
+            </Button>
+          )}
           <Button
             type="button"
             onClick={() => {
               const input = form.getValues(
                 `testCases.${currentTestCaseIndex}.input`
               );
-
               const output = form.getValues(
                 `testCases.${currentTestCaseIndex}.output`
               );
-              console.log(output);
+
               if (input === "" || output === "") {
                 toast({
                   title: "Test case input and output cannot be empty",

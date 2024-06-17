@@ -7,6 +7,8 @@ import {
 import { User } from "@/types/user";
 import { useNavigate } from "react-router-dom";
 import Question from "@/components/compiler/question";
+import CompilationArea from "@/components/compiler/compilation-area";
+import Output from "@/components/compiler/output";
 
 interface Props {
   data: User;
@@ -14,6 +16,7 @@ interface Props {
 
 const Home: React.FC<Props> = ({ data }) => {
   const navigate = useNavigate();
+  const [codeSubmitted, setCodeSubmitted] = React.useState(false);
   if (!data) navigate("/login");
   return (
     <section className="min-h-screen">
@@ -28,11 +31,11 @@ const Home: React.FC<Props> = ({ data }) => {
         <ResizablePanel>
           <ResizablePanelGroup direction="vertical">
             <ResizablePanel>
-              <span className="font-semibold">Two</span>
+              <CompilationArea setCodeSubmitted={setCodeSubmitted} />
             </ResizablePanel>
             <ResizableHandle withHandle />
             <ResizablePanel>
-              <span className="font-semibold">Three</span>
+              <Output codeSubmitted={codeSubmitted} />
             </ResizablePanel>
           </ResizablePanelGroup>
         </ResizablePanel>

@@ -12,6 +12,7 @@ import { useDeleteQuestionModal, useUpdateQuestionModal } from "@/hooks/modal";
 import { Pen, SendHorizonal, Trash2 } from "lucide-react";
 import { useGetUserQuery } from "@/store/services/userApi";
 import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
 const Actions = ({ id }: { id: string }) => {
   const { data } = useGetUserQuery();
   const navigate = useNavigate();
@@ -102,7 +103,14 @@ export const columns: ColumnDef<Question>[] = [
     header: "Difficulty",
     cell: ({ row }) => {
       return (
-        <span className="px-2 py-1 text-xs font-semibold text-white bg-green-500 rounded-full">
+        <span
+          className={cn(
+            "px-2 py-1 text-xs font-semibold text-white rounded-full",
+            row.original.difficulty === "EASY" && "bg-green-500",
+            row.original.difficulty === "MEDIUM" && "bg-yellow-500",
+            row.original.difficulty === "HARD" && "bg-red-500"
+          )}
+        >
           {row.original.difficulty}
         </span>
       );
