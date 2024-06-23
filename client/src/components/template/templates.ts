@@ -1,24 +1,7 @@
 export const frontendTemplates = {
-  PYTHON: `def user_function(input):
-    # Your code here
-`,
-  JAVASCRIPT: `function userFunction(input) {
-    // Your code here
-}
-`,
-  JAVA: `public static String userFunction(String input) {
-    // Your code here
-    return "";
-}
-`,
-  C: `char* user_function(char* input) {
-    // Your code here
-    return input;
-}
-`,
-  CPP: `string user_function(string input) {
-    // Your code here
-    return input;
-}
-`,
+  PYTHON: "# Write your code here in Python",
+  JAVASCRIPT: "// Write your code here in JavaScript",
+  JAVA: "// Write your code here in Java",
+  C: "// Write your code here in C",
+  CPP: "// Write your code here in C++",
 };

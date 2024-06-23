@@ -105,7 +105,7 @@ const QuestionForm = () => {
       );
       const newValue = {
         ...values,
-        testCases,
+        TestCase: testCases,
         tags: tagsArray,
       };
 

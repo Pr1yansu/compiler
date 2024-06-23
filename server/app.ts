@@ -92,10 +92,10 @@ app.listen(5000, () => {
 });
 
 app.use((req: Request, res: Response) => {
-  res.status(404).send("Route not found");
+  return res.status(404).send("Route not found");
 });
 
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error(err.stack);
-  res.status(500).send("Something broke!");
+  return res.status(500).send("Something broke!");
 });

@@ -51,6 +51,7 @@ model TestCase {
   input     String
   output    String
   createdAt DateTime      @default(now())
+  disabled  Boolean       @default(true)
 }
 
 model Submission {
@@ -62,6 +63,7 @@ model Submission {
   code      String
   language  Language
   status    Status
+  Output    String
   createdAt DateTime      @default(now())
 }
 

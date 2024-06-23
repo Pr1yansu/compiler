@@ -10,6 +10,8 @@ import {
 import { useState, useEffect } from "react";
 import { frontendTemplates } from "@/components/template/templates";
 import { Button } from "@/components/ui/button";
+import { useAddSubmissionMutation } from "@/store/services/submissionApi";
+import { useToast } from "../ui/use-toast";
 
 const languages = [
   { label: "JavaScript", value: "javascript" },
@@ -21,18 +23,21 @@ const languages = [
 
 const CompilationArea = ({
   setCodeSubmitted,
+  id,
 }: {
   setCodeSubmitted: React.Dispatch<React.SetStateAction<boolean>>;
+  id: string | undefined;
 }) => {
+  const { toast } = useToast();
+  const [addSubmission] = useAddSubmissionMutation();
   const { theme } = useTheme();
   const [selectedLanguage, setSelectedLanguage] = useState<string>("default");
   const [loading, setLoading] = useState<boolean>(false);
-  const [editorContent, setEditorContent] =
-    useState<string>("choose a language");
+  const [editorContent, setEditorContent] = useState<string>("");
 
   useEffect(() => {
     if (selectedLanguage === "default") {
-      setEditorContent("choose a language");
+      setEditorContent("");
     } else {
       const templateFunction =
         frontendTemplates[
@@ -50,17 +55,29 @@ const CompilationArea = ({
   const handleRunCode = async () => {
     try {
       setLoading(true);
-      const userCode = editorContent
-        .split("{")
-        .slice(1)
-        .join("{")
-        .split("}")
-        .slice(0, -1)
-        .join("}");
-      console.log(userCode);
+      const userCode = editorContent.trim();
+      if (!id) {
+        console.log("No problem id found");
+        return;
+      }
+      if (!userCode) {
+        toast({
+          title: "Error",
+          description: "Please write some code",
+          variant: "destructive",
+        });
+        return;
+      }
+      const response = await addSubmission({
+        code: userCode,
+        language: selectedLanguage,
+        problemId: id,
+      }).unwrap();
+
+      console.log("Submission successful:", response);
       setCodeSubmitted(true);
     } catch (error) {
-      console.log(error);
+      console.error("Error submitting code:", error);
     } finally {
       setLoading(false);
     }
@@ -86,7 +103,9 @@ const CompilationArea = ({
           </SelectContent>
         </Select>
         <div className="px-3">
-          <Button onClick={handleRunCode}>Run Code</Button>
+          <Button onClick={handleRunCode} disabled={loading}>
+            {loading ? "Running..." : "Run Code"}
+          </Button>
         </div>
       </div>
       {selectedLanguage === "default" && (

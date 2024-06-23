@@ -5,7 +5,7 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { User } from "@/types/user";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Question from "@/components/compiler/question";
 import CompilationArea from "@/components/compiler/compilation-area";
 import Output from "@/components/compiler/output";
@@ -16,6 +16,7 @@ interface Props {
 
 const Home: React.FC<Props> = ({ data }) => {
   const navigate = useNavigate();
+  const { id } = useParams();
   const [codeSubmitted, setCodeSubmitted] = React.useState(false);
   if (!data) navigate("/login");
   return (
@@ -31,7 +32,7 @@ const Home: React.FC<Props> = ({ data }) => {
         <ResizablePanel>
           <ResizablePanelGroup direction="vertical">
             <ResizablePanel>
-              <CompilationArea setCodeSubmitted={setCodeSubmitted} />
+              <CompilationArea setCodeSubmitted={setCodeSubmitted} id={id} />
             </ResizablePanel>
             <ResizableHandle withHandle />
             <ResizablePanel>

@@ -22,15 +22,29 @@ export const questionApi = createApi({
       }),
     }),
     addQuestion: builder.mutation<QuestionPostResponse, Partial<Question>>({
-      query: (body) => ({
+      query: ({
+        TestCase,
+        createdAt,
+        description,
+        difficulty,
+        tags,
+        title,
+      }) => ({
         url: "/admin/add/coding/problem",
         method: "POST",
-        body,
+        body: {
+          testCases: TestCase,
+          createdAt,
+          description,
+          difficulty,
+          tags,
+          title,
+        },
       }),
     }),
     updateQuestion: builder.mutation<QuestionPostResponse, Partial<Question>>({
       query: ({
-        testCases,
+        TestCase,
         createdAt,
         description,
         difficulty,
@@ -40,7 +54,14 @@ export const questionApi = createApi({
       }) => ({
         url: `/admin/update/problem/${id}`,
         method: "PUT",
-        body: { testCases, createdAt, description, difficulty, tags, title },
+        body: {
+          testCases: TestCase,
+          createdAt,
+          description,
+          difficulty,
+          tags,
+          title,
+        },
       }),
     }),
     deleteQuestion: builder.mutation<QuestionPostResponse, string>({

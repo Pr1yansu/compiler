@@ -105,16 +105,9 @@ export const addSubmission = async (
       });
     }
 
-    const testCases = await db.testCase.findMany({
-      where: {
-        problemId,
-      },
-    });
-
     const executionResults = await executeCode(
       code,
-      language,
-      testCases,
+      language.toUpperCase() as Language,
       user.id
     );
 
@@ -142,8 +135,9 @@ export const addSubmission = async (
         code,
         problemId,
         userId: user.id,
-        language,
+        language: language.toUpperCase() as Language,
         status,
+        output: JSON.stringify(executionResults),
       },
     });
 
@@ -183,99 +177,6 @@ export const addSubmission = async (
     return res.status(500).json({
       message: "Internal server error",
       exception: "ERROR_ADDING_SUBMISSION",
-      error,
-    });
-  }
-};
-
-export const updateSubmission = async (
-  req: Request<{ id: string }, {}, { code: string; language: Language }>,
-  res: Response
-) => {
-  try {
-    const { user } = req;
-    const { id } = req.params;
-
-    if (!user) {
-      return res.status(401).json({
-        message: "User not authenticated",
-        error: "UserNotAuthenticated",
-      });
-    }
-
-    const problem = await db.codingProblem.findUnique({
-      where: {
-        id,
-      },
-    });
-
-    if (!problem) {
-      return res.status(404).json({ message: "Problem not found" });
-    }
-
-    const { code, language } = req.body;
-
-    if (!code || !language) {
-      return res.status(400).json({
-        message: "Code and language are required",
-        error: "MissingFields",
-      });
-    }
-
-    const testCases = await db.testCase.findMany({
-      where: {
-        problemId: id,
-      },
-    });
-
-    const executionResults = await executeCode(
-      code,
-      language,
-      testCases,
-      user.id
-    );
-
-    const resultsArray = Array.isArray(executionResults)
-      ? executionResults
-      : [executionResults];
-
-    let status: Status = "ACCEPTED";
-    for (const result of resultsArray) {
-      if (result.status === "REJECTED") {
-        status = "REJECTED";
-        break;
-      } else if (result.status === "ERROR") {
-        req.io.emit("error-code", result.status);
-        return res.status(500).json({
-          message: "Internal server error",
-          exception: "ERROR_EXECUTING_CODE",
-          error: result.status,
-        });
-      }
-    }
-
-    const submission = await db.submission.update({
-      where: {
-        id,
-        userId: user.id,
-      },
-      data: {
-        code,
-        language,
-        status,
-      },
-    });
-
-    return res.status(200).json({
-      message: "Submission status updated successfully",
-      submission,
-    });
-  } catch (error) {
-    console.log("ERROR_UPDATING_SUBMISSION_STATUS", error);
-    req.io.emit("error-code", error);
-    return res.status(500).json({
-      message: "Internal server error",
-      exception: "ERROR_UPDATING_SUBMISSION_STATUS",
       error,
     });
   }
